@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Update Profile</title>
+</head>
+<body>
+<h1>
+    Update Profile
+</h1>
+<form method="post" th:object="${buse}">
+    <input type="text" placeholder="name" name="name" th:value="*{getName()}">
+    <br><br>
+    <input type="text" placeholder="surname" name="surname" th:value="*{getSurname()}">
+    <br><br>
+    <input type="text" placeholder="email" name="email" th:value="*{getEmail()}">
+    <br><br>
+    <input type="text" placeholder="password" name="password">
+    <br><br>
+    <button type="submit">
+        Change Profile
+    </button>
+</form>
+</body>
+</html>

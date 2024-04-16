@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User</title>
+</head>
+<body>
+<h1>
+    User is here
+</h1>
+<div th:each="e : ${datas}">
+    <p th:text="'id = ' + ${e.getId()}"></p>
+    <p th:text="'name = ' + ${e.getName()}"></p>
+    <p th:text="'surname = ' + ${e.getSurname()}"></p>
+</div>
+</body>
+</html>

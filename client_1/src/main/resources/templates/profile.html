@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Your Profile</title>
+</head>
+<body>
+<h1>
+    Your Profile
+</h1>
+
+<h3 th:text = "'Name = ' + ${userd.getName()}"></h3>
+<br>
+<br>
+<h3 th:text = "'Surname = ' + ${userd.getSurname()}"></h3>
+<br>
+<br>
+<h3 th:text = "'Email = ' + ${userd.getEmail()}"></h3>
+<br><br>
+<h3 th:text = "'Role = ' + ${userd.getRoles().name()}"></h3>
+<h2>
+    Update your account
+</h2>
+<a href="/data/update">
+    Update
+</a>
+<h2>
+    Delete Profile
+</h2>
+<a href="/data/delete">
+    Delete
+</a>
+<h3>
+    Register by Sender
+</h3>
+<a href="/data/sander">
+    Get by Sender
+</a>
+</body>
+</html>

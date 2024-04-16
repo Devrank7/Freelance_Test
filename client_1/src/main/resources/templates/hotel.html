@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hotel</title>
+</head>
+<body>
+<h3>
+    Shop Hotel
+</h3>
+<div th:each="t : ${hot}">
+    <p th:text="'name = ' + ${t.getName()}"></p>
+    <p th:text="'grate = ' + ${t.getGrate()}"></p>
+    <p th:text="'price = ' + ${t.getPrice()}"></p>
+    <a th:href="@{/asset/pro/{id}(id=${t.getId()})}">Details</a>
+</div>
+</body>
+</html>
