@@ -22,7 +22,6 @@ public class BHotel {
     @Column
     private int price;
     @Column
-    @Lob
     private String img;
     @ManyToOne
     @JoinColumn
