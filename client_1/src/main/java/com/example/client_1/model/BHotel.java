@@ -5,11 +5,20 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "hotel")
 @Getter
 @Setter
 @NoArgsConstructor
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(
+        name = "disc",
+        discriminatorType = DiscriminatorType.INTEGER
+)
+@DiscriminatorValue("null")
 public class BHotel {
 
     @Id
@@ -26,8 +35,15 @@ public class BHotel {
     @ManyToOne
     @JoinColumn
     private BUser owner;
+    @ManyToMany
+    @JoinTable(
+            name = "user_book",
+            joinColumns = @JoinColumn(name = "booker_id"),
+            inverseJoinColumns = @JoinColumn(name = "users_id")
+    )
+    private List<BUser> bookers = new ArrayList<>();
 
-    public BHotel(String name, byte grate,int price, String img, BUser owner) {
+    public BHotel(String name, byte grate, int price, String img, BUser owner) {
         this.name = name;
         this.grate = grate;
         this.price = price;

@@ -18,6 +18,18 @@
 <h3 th:text = "'Email = ' + ${userd.getEmail()}"></h3>
 <br><br>
 <h3 th:text = "'Role = ' + ${userd.getRoles().name()}"></h3>
+
+<h2>
+    Your Asset
+</h2>
+
+<div th:each="y : ${userd.getHotel()}">
+    <a th:href="@{/asset/pro/{id}(id=${y.getId()})}" th:text="'id = ' + ${y.getId()}"></a>
+    <p th:text="'name = ' + ${y.getName()}"></p>
+    <p th:text="'grade = ' + ${y.getGrate()}"></p>
+    <p th:text="'price = ' + ${y.getPrice()}"></p>
+    <img th:src="@{'/img/'+${y.getImg()}}" alt="Image">
+</div>
 <h2>
     Update your account
 </h2>

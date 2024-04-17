@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Update</title>
+</head>
+<body>
+<h1>
+    Update Asset
+</h1>
+<form method="post" enctype="multipart/form-data" th:object="${hot}">
+    <input type="text" placeholder="name" name="name" th:value="*{getName()}">
+    <br><br>
+    <input type="text" placeholder="price" name="price" th:value="*{getPrice()}">
+    <br><br>
+    <input type="file" name="file">
+    <br><br>
+    <button type="submit">
+        Update
+    </button>
+</form>
+</body>
+</html>

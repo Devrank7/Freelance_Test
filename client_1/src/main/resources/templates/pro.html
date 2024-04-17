@@ -17,6 +17,17 @@
 
 <img th:src="@{'/img/'+${use.getImg()}}" alt="Image">
 
-
+<h2>
+    Edit the asset
+</h2>
+<a th:href="@{/asset/update/{id}(id=${use.getId()})}" th:text="'Edit'">
+    Edit
+</a>
+<h2>
+    Delete the asset
+</h2>
+<a th:href="@{/asset/delete/{id}(id=${use.getId()})}" th:text="'Delete'">
+    Edit
+</a>
 </body>
 </html>

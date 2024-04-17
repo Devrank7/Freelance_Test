@@ -36,8 +36,10 @@ public class BUser implements UserDetails {
     private Roles roles;
     @Column
     private Boolean isActive = Boolean.TRUE;
-    @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY,mappedBy = "owner")
+    @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.EAGER,mappedBy = "owner")
     private List<BHotel> hotel = new ArrayList<>();
+    @ManyToMany(cascade = CascadeType.ALL,fetch = FetchType.EAGER,mappedBy = "bookers")
+    private List<BHotel> hotels = new ArrayList<>();
 
     public BUser(String name, String surname, String email, String password) {
         this.name = name;
