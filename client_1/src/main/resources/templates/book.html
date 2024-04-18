@@ -8,8 +8,45 @@
 <h1>
     The asset books
 </h1>
-<form method="post">
-    <input type="text" placeholder="time" name="time">
+<form method="post" th:object="${tie}">
+    <input type="text" placeholder="day" name="day" id="day">
+    <br><br>
+    <input type="text" placeholder="hour" name="hour" id="hour">
+    <br><br>
+    <button type="submit">
+        To book
+    </button>
 </form>
+<h3 th:text="'price = ' + ${boo.getPrice()}" id="price"></h3>
+<div id="withdraw" ></div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const day = document.getElementById('day');
+        const hour = document.getElementById('hour');
+        const priceText = document.getElementById('price').innerText;
+        const price = parseFloat(priceText.split('=')[1]);
+
+        const withdraw = document.getElementById('withdraw');
+
+        function updateSum() {
+            const num1 = parseFloat(day.value);
+            const num2 = parseFloat(hour.value);
+
+            if (!isNaN(num1) && !isNaN(num2) && !isNaN(price)) {
+                let price_day = (price / 10) * num1;
+                let price_hour = ((price / 24) / 10) * num2;
+                let sum = price_day + price_hour;
+                let sumInt = Math.floor(sum);
+
+                withdraw.textContent = `Withdraw: ${sumInt}`;
+            } else {
+                withdraw.textContent = 'Not corrected';
+            }
+        }
+
+        day.addEventListener('input', updateSum);
+        hour.addEventListener('input', updateSum);
+    });
+</script>
 </body>
 </html>

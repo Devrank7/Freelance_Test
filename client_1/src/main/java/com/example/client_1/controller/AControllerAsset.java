@@ -3,12 +3,11 @@ package com.example.client_1.controller;
 import com.example.client_1.model.BHotel;
 import com.example.client_1.model.BItem;
 import com.example.client_1.model.BUser;
+import com.example.client_1.model.DTO_Time;
 import com.example.client_1.model.role.Roles;
 import com.example.client_1.repository.IHotel;
-import com.example.client_1.service.IOrderService;
-import com.example.client_1.service.ServiceSortedById;
-import com.example.client_1.service.ServiceSortedByPrice;
-import com.example.client_1.service.StrategySortedBy;
+import com.example.client_1.repository.IUser;
+import com.example.client_1.service.*;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,10 +29,14 @@ import java.util.UUID;
 public class AControllerAsset {
     @Autowired
     public IHotel hotelRepo;
+    @Autowired
+    private IUser repoUser;
     @Value("${upload.path}")
     private String img;
     @Autowired
     private StrategySortedBy strategySortedBy;
+    @Autowired
+    private Server server;
 
     @GetMapping("/all")
     public String getAll(Model model) {
@@ -127,10 +130,39 @@ public class AControllerAsset {
         return "";
     }
     @GetMapping("/book/{id}")
-    public String getBookAssetByTime(@PathVariable("id") int id,@AuthenticationPrincipal BUser bUser) {
+    public String getBookAssetByTime(@PathVariable("id") int id,@AuthenticationPrincipal BUser bUser,Model model) {
         if (hotelRepo.findById(id).orElseThrow().getOwner().getId() == bUser.getId()) {
             return "redirect:/asset/all";
         }
+        model.addAttribute("tie",new DTO_Time());
+        model.addAttribute("boo",hotelRepo.findById(id).orElseThrow());
         return "book";
+    }
+    @PostMapping("/book/{id}")
+    public String getBoBok(@PathVariable("id")int id,@AuthenticationPrincipal BUser bUser,
+                           @ModelAttribute("tie")DTO_Time dtoTime) {
+        BHotel hotel = hotelRepo.findById(id).orElseThrow(() -> new RuntimeException("not found ex"));
+        int withdraw = 3000;
+        log.warn("price = " + hotel.getPrice());
+        log.warn("day = " + dtoTime.getDay());
+        log.warn("hour = " + dtoTime.getHour());
+
+
+        float day_plus = ((float) dtoTime.getDay() / 10) * hotel.getPrice();
+        float hour_plus = (float) ((float) ((float)dtoTime.getHour() / 24) / 10) * hotel.getPrice();
+        withdraw = (int) ((int) day_plus + hour_plus);
+        log.warn("day sum = " + day_plus);
+        log.warn("hour sum= " + hour_plus);
+
+
+        log.warn("sub = " + withdraw);
+        BUser bUser1 = repoUser.findById(bUser.getId()).orElseThrow();
+        hotel.getBookers().add(bUser1);
+        hotelRepo.save(hotel);
+        int atSeconds = dtoTime.getDay() * 1000;
+        int atMillis = dtoTime.getHour() * 100;
+        server.toBook(hotel,bUser1, atSeconds + atMillis);
+
+        return "redirect:/asset/all";
     }
 }

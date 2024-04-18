@@ -29,5 +29,14 @@
 <a th:href="@{/asset/delete/{id}(id=${use.getId()})}" th:text="'Delete'">
     Edit
 </a>
+
+<h2>
+    To book this asset
+</h2>
+<form method="get" th:action="@{/asset/book/{id}(id=${use.getId()})}">
+    <button type="submit">
+        Book
+    </button>
+</form>
 </body>
 </html>

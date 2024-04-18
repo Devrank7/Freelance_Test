@@ -54,5 +54,17 @@
 <a href="/asset/create">
     Add the asset
 </a>
+<br><br><br>
+<hr>
+<h1>
+    Book asset
+</h1>
+<div th:each="t : ${userd.getHotels()}">
+    <a th:href="@{/asset/pro/{id}(id=${t.getId()})}" th:text="'id = ' + ${t.getId()}"></a>
+    <p th:text="'name = ' + ${t.getName()}"></p>
+    <p th:text="'grade = ' + ${t.getGrate()}"></p>
+    <p th:text="'price = ' + ${t.getPrice()}"></p>
+    <img th:src="@{'/img/'+${t.getImg()}}" alt="Image">
+</div>
 </body>
 </html>

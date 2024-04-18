@@ -52,7 +52,7 @@ public class AController {
     }
     @GetMapping("/profile")
     public String profile(@AuthenticationPrincipal BUser bUser,Model model) {
-        model.addAttribute("userd",bUser);
+        model.addAttribute("userd",repoUser.findById(bUser.getId()).orElseThrow());
         return "profile";
     }
     @GetMapping("/update")

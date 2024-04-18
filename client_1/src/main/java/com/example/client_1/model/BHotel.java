@@ -35,7 +35,7 @@ public class BHotel {
     @ManyToOne
     @JoinColumn
     private BUser owner;
-    @ManyToMany
+    @ManyToMany(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_book",
             joinColumns = @JoinColumn(name = "booker_id"),
