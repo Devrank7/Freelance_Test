@@ -35,6 +35,8 @@ public class BUser implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Roles roles;
     @Column
+    private int currency;
+    @Column
     private Boolean isActive = Boolean.TRUE;
     @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.EAGER,mappedBy = "owner")
     private List<BHotel> hotel = new ArrayList<>();
@@ -80,5 +82,22 @@ public class BUser implements UserDetails {
     @Override
     public boolean isEnabled() {
         return isActive;
+    }
+
+    @Override
+    public String toString() {
+        return "BUser{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", surname='" + surname + '\'' +
+                ", email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", date=" + date +
+                ", roles=" + roles +
+                ", currency=" + currency +
+                ", isActive=" + isActive +
+                ", hotel=" + hotel +
+                ", hotels=" + hotels +
+                '}';
     }
 }

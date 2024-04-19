@@ -13,12 +13,15 @@
   <br><br>
   <input type="text" placeholder="surname" name="surname">
   <br><br>
+  <input type="text" placeholder="currency" name="currency">
+  <br><br>
   <input type="text" placeholder="email" name="email">
   <br><br>
   <input type="text" placeholder="password" name="password">
+  <input type="hidden" name="_csrf" th:value="${_csrf.token}">
   <br><br>
   <button type="submit">
-    Authenication
+    Authefitication
   </button>
 </form>
 </body>

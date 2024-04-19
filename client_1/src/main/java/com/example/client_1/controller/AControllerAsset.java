@@ -1,13 +1,17 @@
 package com.example.client_1.controller;
 
+import com.example.client_1.jwt.CookieUtils;
+import com.example.client_1.jwt.JwtUtils;
 import com.example.client_1.model.BHotel;
 import com.example.client_1.model.BItem;
 import com.example.client_1.model.BUser;
 import com.example.client_1.model.DTO_Time;
+import com.example.client_1.model.role.Direction;
 import com.example.client_1.model.role.Roles;
 import com.example.client_1.repository.IHotel;
 import com.example.client_1.repository.IUser;
 import com.example.client_1.service.*;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,11 +41,18 @@ public class AControllerAsset {
     private StrategySortedBy strategySortedBy;
     @Autowired
     private Server server;
+    @Autowired
+    public JwtUtils jwt;
 
     @GetMapping("/all")
     public String getAll(Model model) {
         model.addAttribute("hot", hotelRepo.findAll());
         return "hotel";
+    }
+    @GetMapping("/all/for")
+    public String forAll(Model model) {
+        model.addAttribute("all",hotelRepo.findAll());
+        return "all";
     }
     @GetMapping("/all/by/id")
     public String getAllByOrder(Model model) {
@@ -62,17 +73,25 @@ public class AControllerAsset {
     }
 
     @GetMapping("/create")
-    public String createAsset(Model model, @AuthenticationPrincipal BUser bUser) {
-        if (bUser.getRoles() == Roles.USER) {
+    public String createAsset(Model model, HttpServletRequest response) {
+        if (repoUser.findBUserByName(jwt.getUsername(CookieUtils.getCookie(response))).getRoles() == Roles.USER) {
             return "redirect:localhost:8000/sclient1/view/test";
         }
 
         model.addAttribute("buse", new BHotel());
         return "create";
     }
+    @GetMapping("/create/adv")
+    public String createAssetAdv(Model model, HttpServletRequest response) {
+        if (repoUser.findBUserByName(jwt.getUsername(CookieUtils.getCookie(response))).getRoles() == Roles.USER) {
+            return "redirect:localhost:8000/sclient1/view/test";
+        }
 
+        model.addAttribute("buse", new BItem());
+        return "createAdv";
+    }
     @PostMapping("/create")
-    public String createLocky(@ModelAttribute("buse") BHotel bHotel, @AuthenticationPrincipal BUser bUser,@RequestParam("imgg")MultipartFile file) throws IOException {
+    public String createLocky(@ModelAttribute("buse") BHotel bHotel, HttpServletRequest response,@RequestParam("imgg")MultipartFile file) throws IOException {
         if (!file.isEmpty()) {
             File file1 = new File(img);
             if (!file1.exists()) {
@@ -83,13 +102,39 @@ public class AControllerAsset {
             file.transferTo(new File(img + "/" + photo));
             bHotel.setImg(photo);
         }
+        String username = jwt.getUsername(CookieUtils.getCookie(response));
+        BUser bUser = repoUser.findBUserByName(username);
         bHotel.setOwner(bUser);
         bHotel.setGrate((byte) 100);
         hotelRepo.save(bHotel);
         return "redirect:/asset/all";
     }
+    @PostMapping("/create/adv")
+    public String createlLocky(@ModelAttribute("buse") BItem bHotel, HttpServletRequest response,@RequestParam("imgg")MultipartFile file) throws IOException {
+        if (!file.isEmpty()) {
+            File file1 = new File(img);
+            if (!file1.exists()) {
+                file1.mkdir();
+            }
+            String random = UUID.randomUUID().toString();
+            String photo = random + "." + file.getOriginalFilename();
+            file.transferTo(new File(img + "/" + photo));
+            bHotel.setImg(photo);
+        }
+        String username = jwt.getUsername(CookieUtils.getCookie(response));
+        BUser bUser = repoUser.findBUserByName(username);
+        bHotel.setOwner(bUser);
+        bHotel.setGrate((byte) 100);
+        bHotel.setDirection(Direction.HOUSEHOLD);
+
+        hotelRepo.save(bHotel);
+        return "redirect:/asset/all";
+    }
+
     @GetMapping("/update/{id}")
-    public String updateH(@PathVariable("id") int id,@AuthenticationPrincipal BUser bUser,Model model) {
+    public String updateH(@PathVariable("id") int id,HttpServletRequest response,Model model) {
+        String username = jwt.getUsername(CookieUtils.getCookie(response));
+        BUser bUser = repoUser.findBUserByName(username);
         if (hotelRepo.findById(id).get().getOwner().getId() == bUser.getId() || bUser.getRoles() == Roles.ADMIN) {
             model.addAttribute("hot",hotelRepo.findById(id).get());
             return "up";
@@ -108,7 +153,9 @@ public class AControllerAsset {
         return "redirect:/asset/all";
     }
     @GetMapping("/delete/{id}")
-    public String delete(@PathVariable("id")int id,@AuthenticationPrincipal BUser bUser) {
+    public String delete(@PathVariable("id")int id,HttpServletRequest response) {
+        String username = jwt.getUsername(CookieUtils.getCookie(response));
+        BUser bUser = repoUser.findBUserByName(username);
         if (hotelRepo.findById(id).get().getOwner().getId() == bUser.getId() || bUser.getRoles() == Roles.ADMIN) {
             hotelRepo.findById(id);
 
@@ -130,7 +177,9 @@ public class AControllerAsset {
         return "";
     }
     @GetMapping("/book/{id}")
-    public String getBookAssetByTime(@PathVariable("id") int id,@AuthenticationPrincipal BUser bUser,Model model) {
+    public String getBookAssetByTime(@PathVariable("id") int id,HttpServletRequest response,Model model) {
+        String username = jwt.getUsername(CookieUtils.getCookie(response));
+        BUser bUser = repoUser.findBUserByName(username);
         if (hotelRepo.findById(id).orElseThrow().getOwner().getId() == bUser.getId()) {
             return "redirect:/asset/all";
         }
@@ -139,8 +188,10 @@ public class AControllerAsset {
         return "book";
     }
     @PostMapping("/book/{id}")
-    public String getBoBok(@PathVariable("id")int id,@AuthenticationPrincipal BUser bUser,
+    public String getBoBok(@PathVariable("id")int id,HttpServletRequest response,
                            @ModelAttribute("tie")DTO_Time dtoTime) {
+        String username = jwt.getUsername(CookieUtils.getCookie(response));
+        BUser bUser = repoUser.findBUserByName(username);
         BHotel hotel = hotelRepo.findById(id).orElseThrow(() -> new RuntimeException("not found ex"));
         int withdraw = 3000;
         log.warn("price = " + hotel.getPrice());
@@ -157,12 +208,16 @@ public class AControllerAsset {
 
         log.warn("sub = " + withdraw);
         BUser bUser1 = repoUser.findById(bUser.getId()).orElseThrow();
+        int currentCurrency = bUser1.getCurrency() - withdraw;
+        if (currentCurrency < 0) {
+            throw new RuntimeException("not enough money exception");
+        }
         hotel.getBookers().add(bUser1);
         hotelRepo.save(hotel);
         int atSeconds = dtoTime.getDay() * 1000;
         int atMillis = dtoTime.getHour() * 100;
         server.toBook(hotel,bUser1, atSeconds + atMillis);
-
         return "redirect:/asset/all";
     }
+    public void aVoid(BItem item) {}
 }

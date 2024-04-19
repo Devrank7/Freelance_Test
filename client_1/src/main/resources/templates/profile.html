@@ -18,7 +18,8 @@
 <h3 th:text = "'Email = ' + ${userd.getEmail()}"></h3>
 <br><br>
 <h3 th:text = "'Role = ' + ${userd.getRoles().name()}"></h3>
-
+<br><br>
+<h3 th:text = "'currency = ' + ${userd.getCurrency()}"></h3>
 <h2>
     Your Asset
 </h2>
@@ -35,6 +36,12 @@
 </h2>
 <a href="/data/update">
     Update
+</a>
+<h2>
+    Add balance
+</h2>
+<a href="/data/balance">
+    Add to balance
 </a>
 <h2>
     Delete Profile

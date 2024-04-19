@@ -1,11 +1,15 @@
 package com.example.client_1.config;
 
+import com.example.client_1.jwt.JwtFilter;
 import com.example.client_1.service.MyUserDatailServer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractAuthenticationFilterConfigurer;
@@ -21,6 +25,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @Configuration
 public class SecurityConfig {
+    @Autowired
+    private JwtFilter jwtFilter;
 
 
     @Bean
@@ -45,10 +51,17 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception
     {
         return httpSecurity.csrf(AbstractHttpConfigurer::disable).
-                authorizeHttpRequests(auth -> auth.requestMatchers("/data/auth").permitAll().requestMatchers("/data/test","/data/profile"
+                authorizeHttpRequests(auth -> auth.requestMatchers("/data/auth","/data/log").permitAll().requestMatchers("/data/test","/data/profile"
                                 ,"/data/update","/data/delete","/data/sander","/asset/**","/img/**").authenticated()
                         .requestMatchers("/data/admin").hasAuthority("ADMIN")
-                ).formLogin(AbstractAuthenticationFilterConfigurer::permitAll).build();
+                ).formLogin(AbstractAuthenticationFilterConfigurer::permitAll).
+                sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).
+        exceptionHandling(en -> en.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.FORBIDDEN)))
+                .              addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class).build();
+    }
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
     }
 
 }

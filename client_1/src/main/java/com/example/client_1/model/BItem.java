@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-//@Entity
+@Entity
 @Getter
 @Setter
 @NoArgsConstructor
@@ -28,5 +28,12 @@ public class BItem extends BHotel {
         this.weight = weight;
         this.direction = direction;
         this.description = description;
+    }
+
+    @Override
+    public String toString() {
+        return "[ -id = " + getId() + "\n" + " -name = " + getName() + "\n" + " -grate = " + getGrate() + "\n" +
+                " -price = " + getPrice() + "\n" + " -durability = " + durability + "\n" +
+                " -weight = " + weight + "\n" + " -direction = " + direction.name() + "\n" + " -description = " + direction + " ]";
     }
 }

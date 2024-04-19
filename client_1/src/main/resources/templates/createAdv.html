@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Advancved</title>
+</head>
+<body>
+<h1>
+    Create new Asset
+</h1>
+<form method="post" action="/asset/create/adv" enctype="multipart/form-data" th:object="${buse}">
+    <input type="text" placeholder="name" name="name">
+    <br><br>
+    <input type="text" placeholder="price" name="price">
+    <br><br>
+    <input type="text" placeholder="durability" name="durability">
+    <br><br>
+    <input type="text" placeholder="weight" name="weight">
+    <br><br>
+    <input type="text" placeholder="description" name="description">
+    <br><br>
+    <input type="file" name="imgg">
+    <br>
+    <button type="submit">
+        Create new Asset
+    </button>
+</form>
+</body>
+</html>

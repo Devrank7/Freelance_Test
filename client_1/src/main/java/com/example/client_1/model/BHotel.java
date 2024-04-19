@@ -50,4 +50,9 @@ public class BHotel {
         this.img = img;
         this.owner = owner;
     }
+    @Override
+    public String toString() {
+        return "[ -id = " + id + "\n" + " -name = " + name + "\n" + " -grate = " + grate + "\n" +
+        " -price = " + price + " ]";
+    }
 }
