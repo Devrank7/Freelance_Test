@@ -6,10 +6,13 @@ import com.example.client_1.model.BUser;
 import com.example.client_1.model.role.Roles;
 import com.example.client_1.repository.ITask;
 import com.example.client_1.repository.IUser;
+import com.netflix.discovery.converters.Auto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,7 +20,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Controller
 @RequestMapping("/data")
@@ -47,7 +53,10 @@ public class AController {
     }
 
     @PostMapping("/auth")
-    public String getAutgh(@ModelAttribute("uses") BUser bUser) {
+    public String getAutgh(@Valid @ModelAttribute("uses") BUser bUser, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return "auth";
+        }
         bUser.setPassword(passwordEncoder.encode(bUser.getPassword()));
         bUser.setRoles(Roles.USER);
         repoUser.save(bUser);
@@ -59,7 +68,7 @@ public class AController {
         return "test";
     }
 
-    @GetMapping("/admin")
+    @GetMapping("/admin/rest")
     @ResponseBody
     public String admin() {
         return "Hello, Admin!";
@@ -73,14 +82,17 @@ public class AController {
     }
 
     @GetMapping("/update")
-    public String getUpdate(Model model,HttpServletRequest response) {
+    public String getUpdate(Model model, HttpServletRequest response) {
         String username = jwt.getUsername(CookieUtils.getCookie(response));
         model.addAttribute("buse", repoUser.findBUserByName(username));
         return "update";
     }
 
     @PostMapping("/update")
-    public String getUpdating( @ModelAttribute("buse") BUser bUser,HttpServletRequest response) {
+    public String getUpdating(@Valid @ModelAttribute("buse") BUser bUser, BindingResult bindingResult, HttpServletRequest response) {
+        if (bindingResult.hasErrors()) {
+            return "update";
+        }
         String username = jwt.getUsername(CookieUtils.getCookie(response));
         BUser bUserd = repoUser.findBUserByName(username);
         log.warn("id = " + bUser.getId());
@@ -147,9 +159,51 @@ public class AController {
         provider.authenticate(new UsernamePasswordAuthenticationToken(username, password));
         log.warn("regis");
         UserDetails userDetails = repoUser.findBUserByName(username);
-        CookieUtils.setCookie(httpServletResponse,jwt.generateToken(userDetails));
+        CookieUtils.setCookie(httpServletResponse, jwt.generateToken(userDetails));
         return "redirect:/data/profile";
 
+    }
+
+    @GetMapping("/become/admin")
+    public String become(HttpServletRequest response) {
+        return "admin";
+    }
+    @PostMapping("/become/admin")
+    public String postBecome(@RequestParam(value = "che",defaultValue = "false")boolean check,HttpServletRequest response) {
+        if (!check) return "redirect:/data/profile";
+        String username = jwt.getUsername(CookieUtils.getCookie(response));
+        BUser bUser = repoUser.findBUserByName(username);
+        int balance = bUser.getCurrency() - 10000;
+        if (balance < 0) {
+            log.warn("not enough balance");
+            return "redirect:/data/profile";
+        }
+        bUser.setCurrency(balance);
+        bUser.setRoles(Roles.ADMIN);
+        repoUser.save(bUser);
+        log.warn("The user was successful updated");
+        return "redirect:/data/profile";
+
+    }
+    @GetMapping("/admin")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public String panelAdmin(Model model,HttpServletRequest response) {
+        String username = jwt.getUsername(CookieUtils.getCookie(response));
+        BUser bUser = repoUser.findBUserByName(username);
+        List<BUser> list = repoUser.findAll();
+        list.remove(bUser);
+        list.removeIf(BUser::isAdmin);
+        model.addAttribute("list",list);
+        model.addAttribute("your",bUser);
+        return "admin_pan";
+    }
+    @PostMapping("/ban/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public String ban(@PathVariable("id")int id) {
+        BUser bUser = repoUser.findById(id).orElseThrow();
+        bUser.setIsActive(!bUser.getIsActive());
+        repoUser.save(bUser);
+        return "redirect:/data/admin";
     }
 
 

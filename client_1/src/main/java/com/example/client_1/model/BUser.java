@@ -2,6 +2,9 @@ package com.example.client_1.model;
 
 import com.example.client_1.model.role.Roles;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -23,12 +26,20 @@ public class BUser implements UserDetails {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private int id;
     @Column
+    @Size(min = 2,max = 20,message = "the name should be 2 from 20 chars")
+    @NotEmpty(message = "is Empty blank")
     private String name;
     @Column
+    @Size(min = 2,max = 30,message = "the surname should be 2 from 30 chars")
+    @NotEmpty(message = "is Empty blank")
     private String surname;
     @Column
+    @Email(message = "Must be email string here")
+    @NotEmpty(message = "is Empty blank")
     private String email;
     @Column
+    @Size(min = 2,max = 157,message = "the password must be contain the more 2 chars")
+    @NotEmpty(message = "is Empty blank")
     private String password;
     @Temporal(TemporalType.DATE)
     private Date date;
@@ -99,5 +110,8 @@ public class BUser implements UserDetails {
                 ", hotel=" + hotel +
                 ", hotels=" + hotels +
                 '}';
+    }
+    public boolean isAdmin() {
+        return roles == Roles.ADMIN;
     }
 }

@@ -9,15 +9,19 @@
     Update Profile
 </h1>
 <form method="post" th:object="${buse}">
-    <input type="text" placeholder="name" name="name" th:value="*{getName()}">
+    <input type="text" placeholder="name" name="name" th:value="*{getName()}" th:filed="*{getName()}">
+    <span style="color: #9a0000" th:if="${#fields.hasErrors('name')}" th:errors="*{name}" ></span>
     <br><br>
-    <input type="text" placeholder="surname" name="surname" th:value="*{getSurname()}">
+    <input type="text" placeholder="surname" name="surname" th:value="*{getSurname()}" th:filed="*{getSurname()}">
+    <span style="color: #9a0000" th:if="${#fields.hasErrors('surname')}" th:errors="*{surname}" ></span>
     <br><br>
     <input type="text" placeholder="currency" name="currency" th:value="*{getCurrency()}">
     <br><br>
-    <input type="text" placeholder="email" name="email" th:value="*{getEmail()}">
+    <input type="text" placeholder="email" name="email" th:value="*{getEmail()}" th:filed="*{getEmail()}">
+    <span style="color: #9a0000" th:if="${#fields.hasErrors('email')}" th:errors="*{email}" ></span>
     <br><br>
-    <input type="text" placeholder="password" name="password">
+    <input type="text" placeholder="password" name="password" th:filed="*{getPassword()}">
+    <span style="color: #9a0000" th:if="${#fields.hasErrors('password')}" th:errors="*{password}" ></span>
     <br><br>
     <button type="submit">
         Change Profile

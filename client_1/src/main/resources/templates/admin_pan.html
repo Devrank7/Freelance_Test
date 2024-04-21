@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin panel</title>
+</head>
+<body>
+<h1>
+    Administrator panel
+</h1>
+<div th:each="t : ${list}">
+    <b th:text="'name = ' + ${t.getName()}"></b>
+    <br>
+    <b th:text="'surname = ' + ${t.getSurname()}"></b>
+    <br>
+    <b th:text="'email = ' + ${t.getEmail()}"></b>
+    <br>
+    <b th:text="'role = ' + ${t.getRoles()}"></b>
+    <br>
+    <form method="post" th:action="@{/data/ban/{id}(id=${t.getId()})}">
+        <button type="submit" th:text="${t.isActive} ? 'ban' : 'unban'">
+            Ban or Unban
+        </button>
+    </form>
+</div>
+<h2>
+    Your profile
+</h2>
+<b th:text="'name = ' + ${your.getName()}"></b>
+<br>
+<b th:text="'surname = ' + ${your.getSurname()}"></b>
+<br>
+<b th:text="'email = ' + ${your.getEmail()}"></b>
+<br>
+<a href="/data/profile">
+    My profile
+</a>
+</body>
+</html>

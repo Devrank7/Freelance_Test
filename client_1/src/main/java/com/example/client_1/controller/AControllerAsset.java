@@ -2,15 +2,13 @@ package com.example.client_1.controller;
 
 import com.example.client_1.jwt.CookieUtils;
 import com.example.client_1.jwt.JwtUtils;
-import com.example.client_1.model.BHotel;
-import com.example.client_1.model.BItem;
-import com.example.client_1.model.BUser;
-import com.example.client_1.model.DTO_Time;
+import com.example.client_1.model.*;
 import com.example.client_1.model.role.Direction;
 import com.example.client_1.model.role.Roles;
 import com.example.client_1.repository.IHotel;
 import com.example.client_1.repository.IUser;
 import com.example.client_1.service.*;
+import com.example.client_1.service.cache.CacheService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -25,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.UUID;
 
 @Controller
@@ -43,6 +42,8 @@ public class AControllerAsset {
     private Server server;
     @Autowired
     public JwtUtils jwt;
+    @Autowired
+    private CacheService cacheService;
 
     @GetMapping("/all")
     public String getAll(Model model) {
@@ -67,8 +68,29 @@ public class AControllerAsset {
 
     @GetMapping("/pro/{id}")
     public String getProo(@PathVariable("id") int id, Model model) {
-        model.addAttribute("use",  hotelRepo.findById(id).orElseThrow());
-        log.warn("str = " + hotelRepo.findById(id).get().getImg());
+        BHotel bHotel = null;
+        if (cacheService.isObjectInCache("hotel",id)) {
+            log.warn("l1");
+            bHotel = cacheService.getter(id);
+        } else {
+            log.warn("l2");
+            bHotel = hotelRepo.findById(id).orElseThrow();
+            if (cacheService.needToAddToCache(bHotel)) {
+                log.warn("l3");
+                cacheService.getter(id);
+            }
+        }
+        int gradesSum = 0;//bHotel.getGrades().stream().mapToInt(sum -> { return sum.getGrade();}).sum();
+        for (BGrade gg : bHotel.getGrades()) {
+            gradesSum+=gg.getGrade();
+        }
+        int grades = 0;
+        if (!bHotel.getGrades().isEmpty()) {
+            grades = gradesSum / bHotel.getGrades().size();
+        }
+        model.addAttribute("use",  bHotel);
+        model.addAttribute("grade",grades);
+        log.warn("str = " + bHotel.getImg());
         return "pro";
     }
 
@@ -145,10 +167,20 @@ public class AControllerAsset {
     public String postUpdate(@PathVariable("id")int id,@RequestParam("name")String name,
                              @RequestParam("price")int price,
                              @RequestParam("file")MultipartFile file) throws IOException {
-        BHotel bHotel = hotelRepo.findById(id).get();
+        BHotel bHotel;
+        boolean isCache = false;
+        if (cacheService.isObjectInCache("hotel",id)) {
+            bHotel = cacheService.getter(id);
+            isCache = true;
+        } else {
+            bHotel = hotelRepo.findById(id).orElseThrow();
+        }
         bHotel.setName(name);
         bHotel.setPrice(price);
         bHotel.setImg(alongPhoto(file));
+        if (isCache) {
+            cacheService.setter(bHotel,id);
+        }
         hotelRepo.save(bHotel);
         return "redirect:/asset/all";
     }
@@ -157,7 +189,10 @@ public class AControllerAsset {
         String username = jwt.getUsername(CookieUtils.getCookie(response));
         BUser bUser = repoUser.findBUserByName(username);
         if (hotelRepo.findById(id).get().getOwner().getId() == bUser.getId() || bUser.getRoles() == Roles.ADMIN) {
-            hotelRepo.findById(id);
+            if(cacheService.isObjectInCache("hotel",id)) {
+                cacheService.deleter(id);
+            }
+            hotelRepo.deleteById(id);
 
         }
         return "redirect:/asset/all";
@@ -217,6 +252,28 @@ public class AControllerAsset {
         int atSeconds = dtoTime.getDay() * 1000;
         int atMillis = dtoTime.getHour() * 100;
         server.toBook(hotel,bUser1, atSeconds + atMillis);
+        return "redirect:/asset/all";
+    }
+    @GetMapping("/pro/grade/{id}")
+    public String getUss(@PathVariable("id")int id,HttpServletRequest response) {
+        String username = jwt.getUsername(CookieUtils.getCookie(response));
+        BUser bUser = repoUser.findBUserByName(username);
+        BHotel bHotel = hotelRepo.findById(id).orElseThrow();
+        for (BGrade grade : bHotel.getGrades()) {
+            if (grade.getUser_id() == bUser.getId()) {
+                return "redirect:/asset/all";
+            }
+        }
+        return "grade";
+    }
+    @PostMapping("/pro/grade/{id}")
+    public String getUs(@PathVariable("id")int id,@RequestParam("grade")int grade,HttpServletRequest response) {
+        String username = jwt.getUsername(CookieUtils.getCookie(response));
+        grade = Math.clamp(grade,0,100);
+        BUser bUser = repoUser.findBUserByName(username);
+        BHotel bHotel = hotelRepo.findById(id).orElseThrow();
+        bHotel.getGrades().add(new BGrade(grade, bUser.getId()));
+        hotelRepo.save(bHotel);
         return "redirect:/asset/all";
     }
     public void aVoid(BItem item) {}

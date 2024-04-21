@@ -73,5 +73,28 @@
     <p th:text="'price = ' + ${t.getPrice()}"></p>
     <img th:src="@{'/img/'+${t.getImg()}}" alt="Image">
 </div>
+<br>
+<br>
+<hr>
+<h2><i>
+    Become to Admin
+</i></h2>
+<a href="/data/become/admin">
+    Become to Admin
+</a>
+<br><br>
+<hr>
+<div th:if="${userd.isAdmin()}">
+    <h2>
+        Panel Administrator
+    </h2>
+</div>
+<div th:if="${userd.isAdmin()}">
+    <form method="get" action="/data/admin">
+        <button type="submit">
+            Go to admin panel
+        </button>
+    </form>
+</div>
 </body>
 </html>

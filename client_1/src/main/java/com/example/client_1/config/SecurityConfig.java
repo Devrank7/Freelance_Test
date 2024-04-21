@@ -10,6 +10,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractAuthenticationFilterConfigurer;
@@ -24,6 +26,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @EnableWebSecurity
 @Configuration
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
     @Autowired
     private JwtFilter jwtFilter;
@@ -52,8 +55,8 @@ public class SecurityConfig {
     {
         return httpSecurity.csrf(AbstractHttpConfigurer::disable).
                 authorizeHttpRequests(auth -> auth.requestMatchers("/data/auth","/data/log").permitAll().requestMatchers("/data/test","/data/profile"
-                                ,"/data/update","/data/delete","/data/sander","/asset/**","/img/**").authenticated()
-                        .requestMatchers("/data/admin").hasAuthority("ADMIN")
+                                ,"/data/update","/data/delete","/data/sander","/asset/**","/img/**","/data/balance","/data/become/admin").authenticated()
+                        .requestMatchers("/data/admin/**","/data/ban/**").hasAuthority("ADMIN")
                 ).formLogin(AbstractAuthenticationFilterConfigurer::permitAll).
                 sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).
         exceptionHandling(en -> en.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.FORBIDDEN)))
