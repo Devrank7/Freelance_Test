@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -60,7 +61,11 @@ public class SecurityConfig {
                 ).formLogin(AbstractAuthenticationFilterConfigurer::permitAll).
                 sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).
         exceptionHandling(en -> en.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.FORBIDDEN)))
-                .              addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class).build();
+                .              addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                //.oauth2Login(oa -> oa.loginPage(
+               //         "/data/log"
+               // ).defaultSuccessUrl("/data/profile"))
+                .build();
     }
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {

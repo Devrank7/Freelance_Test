@@ -114,4 +114,17 @@ public class BUser implements UserDetails {
     public boolean isAdmin() {
         return roles == Roles.ADMIN;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BUser bUser = (BUser) o;
+        return id == bUser.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

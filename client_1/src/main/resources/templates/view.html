@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>View</title>
+</head>
+<body>
+<b th:text="'name = ' + ${comm.getName()}" ></b>
+<br>
+<b th:text="'price = ' + ${comm.getPrice()}" ></b>
+<hr>
+<h1>
+    Comments
+</h1>
+<div th:each="t : ${comm.getComments()}">
+    <b th:text="'owner = ' + ${t.getOwner()}" ></b>
+    <hr>
+    <b th:text="'text: ' + ${t.getText()}"></b>
+    <br>
+    <br>
+</div>
+<hr>
+<br>
+<br>
+<h2>
+    Add comment
+</h2>
+<a th:href="@{/asset/comment/{id}(id=${comm.getId()})}">
+    Add comment
+</a>
+</body>
+</html>

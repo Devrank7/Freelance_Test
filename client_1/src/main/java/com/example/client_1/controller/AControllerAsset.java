@@ -65,21 +65,16 @@ public class AControllerAsset {
         model.addAttribute("hot",strategySortedBy.sorted(new ServiceSortedByPrice(),hotelRepo.findAll()));
         return "hotel";
     }
+    @GetMapping("/all/by/grade")
+    public String getAllByOrderGrade(Model model) {
+        model.addAttribute("hot",strategySortedBy.sorted(new ServiceOrderByGrade(),hotelRepo.findAll()));
+        return "hotel";
+    }
 
     @GetMapping("/pro/{id}")
     public String getProo(@PathVariable("id") int id, Model model) {
-        BHotel bHotel = null;
-        if (cacheService.isObjectInCache("hotel",id)) {
-            log.warn("l1");
-            bHotel = cacheService.getter(id);
-        } else {
-            log.warn("l2");
-            bHotel = hotelRepo.findById(id).orElseThrow();
-            if (cacheService.needToAddToCache(bHotel)) {
-                log.warn("l3");
-                cacheService.getter(id);
-            }
-        }
+        BHotel bHotel = ontoCacheHotel(id);
+
         int gradesSum = 0;//bHotel.getGrades().stream().mapToInt(sum -> { return sum.getGrade();}).sum();
         for (BGrade gg : bHotel.getGrades()) {
             gradesSum+=gg.getGrade();
@@ -96,7 +91,7 @@ public class AControllerAsset {
 
     @GetMapping("/create")
     public String createAsset(Model model, HttpServletRequest response) {
-        if (repoUser.findBUserByName(jwt.getUsername(CookieUtils.getCookie(response))).getRoles() == Roles.USER) {
+        if (ontoCache((jwt.getUsername(CookieUtils.getCookie(response)))).getRoles() == Roles.USER) {
             return "redirect:localhost:8000/sclient1/view/test";
         }
 
@@ -105,7 +100,7 @@ public class AControllerAsset {
     }
     @GetMapping("/create/adv")
     public String createAssetAdv(Model model, HttpServletRequest response) {
-        if (repoUser.findBUserByName(jwt.getUsername(CookieUtils.getCookie(response))).getRoles() == Roles.USER) {
+        if (ontoCache((jwt.getUsername(CookieUtils.getCookie(response)))).getRoles() == Roles.USER) {
             return "redirect:localhost:8000/sclient1/view/test";
         }
 
@@ -125,7 +120,8 @@ public class AControllerAsset {
             bHotel.setImg(photo);
         }
         String username = jwt.getUsername(CookieUtils.getCookie(response));
-        BUser bUser = repoUser.findBUserByName(username);
+        BUser bUser = ontoCache(username);
+
         bHotel.setOwner(bUser);
         bHotel.setGrate((byte) 100);
         hotelRepo.save(bHotel);
@@ -144,7 +140,7 @@ public class AControllerAsset {
             bHotel.setImg(photo);
         }
         String username = jwt.getUsername(CookieUtils.getCookie(response));
-        BUser bUser = repoUser.findBUserByName(username);
+        BUser bUser = ontoCache(username);
         bHotel.setOwner(bUser);
         bHotel.setGrate((byte) 100);
         bHotel.setDirection(Direction.HOUSEHOLD);
@@ -156,9 +152,9 @@ public class AControllerAsset {
     @GetMapping("/update/{id}")
     public String updateH(@PathVariable("id") int id,HttpServletRequest response,Model model) {
         String username = jwt.getUsername(CookieUtils.getCookie(response));
-        BUser bUser = repoUser.findBUserByName(username);
+        BUser bUser = ontoCache(username);
         if (hotelRepo.findById(id).get().getOwner().getId() == bUser.getId() || bUser.getRoles() == Roles.ADMIN) {
-            model.addAttribute("hot",hotelRepo.findById(id).get());
+            model.addAttribute("hot",ontoCacheHotel(id));
             return "up";
         }
         return "redirect:/asset/all";
@@ -167,18 +163,11 @@ public class AControllerAsset {
     public String postUpdate(@PathVariable("id")int id,@RequestParam("name")String name,
                              @RequestParam("price")int price,
                              @RequestParam("file")MultipartFile file) throws IOException {
-        BHotel bHotel;
-        boolean isCache = false;
-        if (cacheService.isObjectInCache("hotel",id)) {
-            bHotel = cacheService.getter(id);
-            isCache = true;
-        } else {
-            bHotel = hotelRepo.findById(id).orElseThrow();
-        }
+        BHotel bHotel = ontoCacheHotel(id);
         bHotel.setName(name);
         bHotel.setPrice(price);
         bHotel.setImg(alongPhoto(file));
-        if (isCache) {
+        if (cacheService.isObjectInCache("hotel",id)) {
             cacheService.setter(bHotel,id);
         }
         hotelRepo.save(bHotel);
@@ -187,7 +176,7 @@ public class AControllerAsset {
     @GetMapping("/delete/{id}")
     public String delete(@PathVariable("id")int id,HttpServletRequest response) {
         String username = jwt.getUsername(CookieUtils.getCookie(response));
-        BUser bUser = repoUser.findBUserByName(username);
+        BUser bUser = ontoCache(username);
         if (hotelRepo.findById(id).get().getOwner().getId() == bUser.getId() || bUser.getRoles() == Roles.ADMIN) {
             if(cacheService.isObjectInCache("hotel",id)) {
                 cacheService.deleter(id);
@@ -214,20 +203,20 @@ public class AControllerAsset {
     @GetMapping("/book/{id}")
     public String getBookAssetByTime(@PathVariable("id") int id,HttpServletRequest response,Model model) {
         String username = jwt.getUsername(CookieUtils.getCookie(response));
-        BUser bUser = repoUser.findBUserByName(username);
+        BUser bUser = ontoCache(username);
         if (hotelRepo.findById(id).orElseThrow().getOwner().getId() == bUser.getId()) {
             return "redirect:/asset/all";
         }
         model.addAttribute("tie",new DTO_Time());
-        model.addAttribute("boo",hotelRepo.findById(id).orElseThrow());
+        model.addAttribute("boo",ontoCacheHotel(id));
         return "book";
     }
     @PostMapping("/book/{id}")
     public String getBoBok(@PathVariable("id")int id,HttpServletRequest response,
                            @ModelAttribute("tie")DTO_Time dtoTime) {
         String username = jwt.getUsername(CookieUtils.getCookie(response));
-        BUser bUser = repoUser.findBUserByName(username);
-        BHotel hotel = hotelRepo.findById(id).orElseThrow(() -> new RuntimeException("not found ex"));
+        BUser bUser = ontoCache(username);
+        BHotel hotel = ontoCacheHotel(id);
         int withdraw = 3000;
         log.warn("price = " + hotel.getPrice());
         log.warn("day = " + dtoTime.getDay());
@@ -252,13 +241,14 @@ public class AControllerAsset {
         int atSeconds = dtoTime.getDay() * 1000;
         int atMillis = dtoTime.getHour() * 100;
         server.toBook(hotel,bUser1, atSeconds + atMillis);
+
         return "redirect:/asset/all";
     }
     @GetMapping("/pro/grade/{id}")
     public String getUss(@PathVariable("id")int id,HttpServletRequest response) {
         String username = jwt.getUsername(CookieUtils.getCookie(response));
-        BUser bUser = repoUser.findBUserByName(username);
-        BHotel bHotel = hotelRepo.findById(id).orElseThrow();
+        BUser bUser = ontoCache(username);
+        BHotel bHotel = ontoCacheHotel(id);
         for (BGrade grade : bHotel.getGrades()) {
             if (grade.getUser_id() == bUser.getId()) {
                 return "redirect:/asset/all";
@@ -270,11 +260,53 @@ public class AControllerAsset {
     public String getUs(@PathVariable("id")int id,@RequestParam("grade")int grade,HttpServletRequest response) {
         String username = jwt.getUsername(CookieUtils.getCookie(response));
         grade = Math.clamp(grade,0,100);
-        BUser bUser = repoUser.findBUserByName(username);
-        BHotel bHotel = hotelRepo.findById(id).orElseThrow();
+        BUser bUser = ontoCache(username);
+        BHotel bHotel = ontoCacheHotel(id);
         bHotel.getGrades().add(new BGrade(grade, bUser.getId()));
         hotelRepo.save(bHotel);
         return "redirect:/asset/all";
     }
+    @GetMapping("/comment/{id}")
+    public String getComm(@PathVariable("id")int id,HttpServletRequest request) {
+        return "comment";
+    }
+    @PostMapping("/comment/{id}")
+    public String postComment(@PathVariable("id")int id,HttpServletRequest request,@RequestParam("textus")String text) {
+        String username = jwt.getUsername(CookieUtils.getCookie(request));
+        BUser bUser = ontoCache(username);
+        Comment comment = new Comment(bUser.getName(),text);
+        BHotel bHotel = ontoCacheHotel(id);
+        bHotel.getComments().add(comment);
+        hotelRepo.save(bHotel);
+        return "redirect:/asset/all";
+    }
+    @GetMapping("/comment/view/{id}")
+    public String view(@PathVariable("id")int id,Model model) {
+        model.addAttribute("comm",ontoCacheHotel(id));
+        return "view";
+    }
+    public BUser ontoCache(String username) {
+        if (cacheService.isObjectInCache("users",username)) {
+            return cacheService.getterUsr(username);
+        } else {
+            BUser bUser = repoUser.findBUserByName(username);
+            if (cacheService.needToAddToCacheUsr(bUser)) {
+                cacheService.getterUsr(username);
+            }
+            return bUser;
+        }
+    }
+    public BHotel ontoCacheHotel(int username) {
+        if (cacheService.isObjectInCache("hotel",username)) {
+            return cacheService.getter(username);
+        } else {
+            BHotel bUser = hotelRepo.findById(username).orElseThrow();
+            if (cacheService.needToAddToCache(bUser)) {
+                cacheService.getter(username);
+            }
+            return bUser;
+        }
+    }
+
     public void aVoid(BItem item) {}
 }

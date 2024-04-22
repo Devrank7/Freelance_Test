@@ -37,6 +37,10 @@ public class BHotel {
     @CollectionTable(name = "user_grade",
     joinColumns = @JoinColumn(name = "grade_id"))
     private List<BGrade> grades = new ArrayList<>();
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "usr_comment",
+    joinColumns = @JoinColumn(name = "com_id"))
+    private List<Comment> comments = new ArrayList<>();
     @ManyToOne
     @JoinColumn
     private BUser owner;
@@ -55,6 +59,12 @@ public class BHotel {
         this.img = img;
         this.owner = owner;
     }
+    public BHotel(String name, byte grate, int price, String img) {
+        this.name = name;
+        this.grate = grate;
+        this.price = price;
+        this.img = img;
+    }
     @Override
     public String toString() {
         return "[ -id = " + id + "\n" + " -name = " + name + "\n" + " -grate = " + grate + "\n" +
@@ -72,6 +82,13 @@ public class BHotel {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+    public int gradeAvg() {
+        if (!getGrades().isEmpty()) {
+            int u = getGrades().stream().mapToInt(n -> n.getGrade()).sum() / getGrades().size();
+            return u;
+        }
+        return 0;
     }
 
 }

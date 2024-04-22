@@ -52,5 +52,12 @@
         To rate
     </button>
 </form>
+<h2><i>
+    View the comment
+</i></h2>
+<br>
+<a th:href="@{/asset/comment/view/{id}(id=${use.getId()})}">
+    View comment
+</a>
 </body>
 </html>

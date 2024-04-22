@@ -6,12 +6,16 @@ import com.example.client_1.model.BUser;
 import com.example.client_1.model.role.Roles;
 import com.example.client_1.repository.ITask;
 import com.example.client_1.repository.IUser;
+import com.example.client_1.service.cache.CacheService;
 import com.netflix.discovery.converters.Auto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,6 +27,9 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import javax.sound.sampled.*;
+import java.io.File;
+import java.util.Date;
 import java.util.List;
 
 @Controller
@@ -40,6 +47,10 @@ public class AController {
     public AuthenticationProvider provider;
     public JwtUtils jwt;
 
+    private CacheService cacheService;
+    //@Value("upload.song")
+    // private String songs;
+
     @GetMapping("/da")
     public String getdjf(Model model) {
         model.addAttribute("datas", repoTask.findAll());
@@ -48,6 +59,7 @@ public class AController {
 
     @GetMapping("/auth")
     public String getAuth(Model model) {
+        playSound("xv.wav");
         model.addAttribute("uses", new BUser());
         return "auth";
     }
@@ -77,14 +89,14 @@ public class AController {
     @GetMapping("/profile")
     public String profile(Model model, HttpServletRequest response) {
         String username = jwt.getUsername(CookieUtils.getCookie(response));
-        model.addAttribute("userd", repoUser.findBUserByName(username));
+        model.addAttribute("userd", ontoCache(username));
         return "profile";
     }
 
     @GetMapping("/update")
     public String getUpdate(Model model, HttpServletRequest response) {
         String username = jwt.getUsername(CookieUtils.getCookie(response));
-        model.addAttribute("buse", repoUser.findBUserByName(username));
+        model.addAttribute("buse", ontoCache(username));
         return "update";
     }
 
@@ -94,27 +106,35 @@ public class AController {
             return "update";
         }
         String username = jwt.getUsername(CookieUtils.getCookie(response));
-        BUser bUserd = repoUser.findBUserByName(username);
+        BUser bUserd = ontoCache(username);
         log.warn("id = " + bUser.getId());
         bUser.setId(bUserd.getId());
+        bUser.setName(bUserd.getName());
         bUser.setRoles(Roles.USER);
-        bUser.setDate(bUser.getDate());
-        bUser.setPassword(passwordEncoder.encode(bUser.getPassword()));
-        repoUser.save(bUser);
+        bUser.setDate(new Date());
+        bUser.setPassword(passwordEncoder.encode(bUserd.getPassword()));
+        if (cacheService.isObjectInCache("users",username)) {
+            cacheService.setterUsr(bUser,username);
+        }
+        repoUser.save(bUserd);
         return "redirect:/data/profile";
     }
 
     @GetMapping("/delete")
     public String getDelete(HttpServletRequest response) {
         String username = jwt.getUsername(CookieUtils.getCookie(response));
-        repoUser.deleteById(repoUser.findBUserByName(username).getId());
+        BUser bUser = ontoCache(username);
+        if (cacheService.isObjectInCache("users",username)) {
+            cacheService.deleterUsr(bUser.getName());
+        }
+        repoUser.deleteById(bUser.getId());
         return "redirect:/logout";
     }
 
     @GetMapping("/sander")
     public String getSander(HttpServletRequest response) {
         String username = jwt.getUsername(CookieUtils.getCookie(response));
-        BUser bUser = repoUser.findBUserByName(username);
+        BUser bUser = ontoCache(username);
         if (bUser.getRoles() == Roles.SENDER || bUser.getRoles() == Roles.ADMIN) {
             return "redirect:/data/profile";
         }
@@ -125,9 +145,12 @@ public class AController {
     public String getSender(HttpServletRequest response, @RequestParam(value = "check", defaultValue = "false") boolean cheak) {
         log.warn("check = " + cheak);
         String username = jwt.getUsername(CookieUtils.getCookie(response));
-        BUser bUser = repoUser.findBUserByName(username);
+        BUser bUser = ontoCache(username);
         if (cheak) {
             bUser.setRoles(Roles.SENDER);
+            if (cacheService.isObjectInCache("users",bUser.getName())) {
+                cacheService.setterUsr(bUser,bUser.getName());
+            }
             repoUser.save(bUser);
         }
         return "redirect:/data/profile";
@@ -141,10 +164,12 @@ public class AController {
     @PostMapping("/balance")
     public String sendBall(HttpServletRequest response, @RequestParam("addd") int add) {
         String username = jwt.getUsername(CookieUtils.getCookie(response));
-        BUser bUser = repoUser.findBUserByName(username);
-        BUser bUser1 = repoUser.findById(bUser.getId()).orElseThrow();
-        bUser1.setCurrency(bUser.getCurrency() + add);
-        repoUser.save(bUser1);
+        BUser bUser = ontoCache(username);
+        bUser.setCurrency(bUser.getCurrency() + add);
+        if (cacheService.isObjectInCache("users",bUser.getName())) {
+            cacheService.setterUsr(bUser,bUser.getName());
+        }
+        repoUser.save(bUser);
         return "redirect:/data/profile";
     }
 
@@ -168,11 +193,12 @@ public class AController {
     public String become(HttpServletRequest response) {
         return "admin";
     }
+
     @PostMapping("/become/admin")
-    public String postBecome(@RequestParam(value = "che",defaultValue = "false")boolean check,HttpServletRequest response) {
+    public String postBecome(@RequestParam(value = "che", defaultValue = "false") boolean check, HttpServletRequest response) {
         if (!check) return "redirect:/data/profile";
         String username = jwt.getUsername(CookieUtils.getCookie(response));
-        BUser bUser = repoUser.findBUserByName(username);
+        BUser bUser = ontoCache(username);
         int balance = bUser.getCurrency() - 10000;
         if (balance < 0) {
             log.warn("not enough balance");
@@ -180,30 +206,77 @@ public class AController {
         }
         bUser.setCurrency(balance);
         bUser.setRoles(Roles.ADMIN);
+        if (cacheService.isObjectInCache("users",bUser.getName())) {
+            log.warn("bb2");
+            cacheService.setterUsr(bUser,bUser.getName());
+        }
         repoUser.save(bUser);
         log.warn("The user was successful updated");
         return "redirect:/data/profile";
 
     }
+
     @GetMapping("/admin")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public String panelAdmin(Model model,HttpServletRequest response) {
+    public String panelAdmin(Model model, HttpServletRequest response) {
         String username = jwt.getUsername(CookieUtils.getCookie(response));
-        BUser bUser = repoUser.findBUserByName(username);
+        BUser bUser = ontoCache(username);
         List<BUser> list = repoUser.findAll();
         list.remove(bUser);
         list.removeIf(BUser::isAdmin);
-        model.addAttribute("list",list);
-        model.addAttribute("your",bUser);
+        model.addAttribute("list", list);
+        model.addAttribute("your", bUser);
         return "admin_pan";
     }
+
     @PostMapping("/ban/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public String ban(@PathVariable("id")int id) {
+    public String ban(@PathVariable("id") int id) {
         BUser bUser = repoUser.findById(id).orElseThrow();
         bUser.setIsActive(!bUser.getIsActive());
+        if (cacheService.isObjectInCache("users",bUser.getName())) {
+            log.warn("bb1");
+            cacheService.setterUsr(bUser,bUser.getName());
+        }
         repoUser.save(bUser);
         return "redirect:/data/admin";
+    }
+
+    //GPT Thanks
+    public static void playSound(String soundFilePath) {
+        try {
+            // Получаем аудиофайл из ресурсов
+            ClassPathResource resource = new ClassPathResource(soundFilePath);
+            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(resource.getInputStream());
+
+            // Создаем Clip и воспроизводим аудио
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioInputStream);
+            clip.start();
+
+            // Ждем, пока аудиофайл не воспроизведется полностью
+            Thread.sleep(clip.getMicrosecondLength() / 1000);
+
+            // Закрываем поток и освобождаем ресурсы
+            clip.stop();
+            clip.close();
+            audioInputStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    public BUser ontoCache(String username) {
+        if (cacheService.isObjectInCache("users",username)) {
+            log.warn("t23");
+            return cacheService.getterUsr(username);
+        } else {
+            log.warn("t89");
+            BUser bUser = repoUser.findBUserByName(username);
+            if (cacheService.needToAddToCacheUsr(bUser)) {
+                cacheService.getterUsr(username);
+            }
+            return bUser;
+        }
     }
 
 

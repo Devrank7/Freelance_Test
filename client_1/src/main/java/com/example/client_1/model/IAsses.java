@@ -4,4 +4,5 @@ public interface IAsses {
 
     String getName();
     String setName();
+    default void go() {}
 }
