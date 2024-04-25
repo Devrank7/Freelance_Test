@@ -3,18 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <title>All</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e0f2f1; /* Light blue-green */
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #ffffff; /* White */
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #004d40; /* Dark green */
+            text-align: center;
+        }
+
+        h2 {
+            color: #004d40; /* Dark green */
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        p {
+            color: #00695c; /* Green */
+            font-size: 18px;
+            margin: 10px 0;
+        }
+    </style>
 </head>
 <body>
-<h1>
-    List of asset
-</h1>
-<div th:each="t : ${all}">
-    <p th:text="${t.toString()}">
-
-    </p>
+<div class="container">
+    <h1>List of assets</h1>
+    <div th:each="t : ${all}">
+        <p th:text="${t.toString()}"></p>
+    </div>
+    <h2>The end</h2>
 </div>
-<h2>
-    The end
-</h2>
 </body>
 </html>
+
+

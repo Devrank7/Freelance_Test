@@ -3,29 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <title>Hotel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h3 {
+            color: #1a237e; /* Dark blue */
+            text-align: center;
+        }
+
+        .hotel-item {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        a {
+            color: #1565c0; /* Blue */
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .sort-links {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        hr {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-<h3>
-    Shop Hotel
-</h3>
-<div th:each="t : ${hot}">
-    <p th:text="'name = ' + ${t.getName()}"></p>
-    <p th:text="'grate = ' + ${t.getGrate()}"></p>
-    <p th:text="'price = ' + ${t.getPrice()}"></p>
-    <a th:href="@{/asset/pro/{id}(id=${t.getId()})}">Details</a>
+<div class="container">
+    <h3>Shop Hotel</h3>
+    <div th:each="t : ${hot}" class="hotel-item">
+        <p th:text="'Name: ' + ${t.getName()}"></p>
+        <p th:text="'Rate: ' + ${t.gradeAvg()}"></p>
+        <p th:text="'Price: ' + ${t.getPrice()}"></p>
+        <a th:href="@{/asset/pro/{id}(id=${t.getId()})}">Details</a>
+    </div>
+    <h2>Sort as</h2>
+    <hr>
+    <div class="sort-links">
+        <a href="/asset/all/by/price">Sort by Price</a>
+        <hr>
+        <a href="/asset/all/by/grade">Sort by Grade</a>
+        <hr>
+    </div>
 </div>
-<h2>
-    Sort as
-</h2>
-<hr>
-<a href="/asset/all/by/price">
-    Sort as price
-</a>
-<hr>
-<hr>
-<a href="/asset/all/by/grade">
-    Sort as price
-</a>
-<hr>
 </body>
 </html>

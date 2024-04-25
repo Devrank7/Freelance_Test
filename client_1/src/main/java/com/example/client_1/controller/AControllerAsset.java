@@ -236,6 +236,8 @@ public class AControllerAsset {
         if (currentCurrency < 0) {
             throw new RuntimeException("not enough money exception");
         }
+        bUser1.setCurrency(currentCurrency);
+        repoUser.save(bUser1);
         hotel.getBookers().add(bUser1);
         hotelRepo.save(hotel);
         int atSeconds = dtoTime.getDay() * 1000;

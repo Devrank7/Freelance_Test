@@ -3,98 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <title>Your Profile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1, h2, h3 {
+            color: #333;
+        }
+
+        p {
+            margin: 5px 0;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        img {
+            max-width: 200px;
+            max-height: 200px;
+            margin: 10px 0;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid #ccc;
+            margin: 20px 0;
+        }
+
+        i {
+            color: #007bff;
+        }
+    </style>
 </head>
 <body>
-<h1>
-    Your Profile
-</h1>
+<div class="container">
+    <h1>Your Profile</h1>
 
-<h3 th:text = "'Name = ' + ${userd.getName()}"></h3>
-<br>
-<br>
-<h3 th:text = "'Surname = ' + ${userd.getSurname()}"></h3>
-<br>
-<br>
-<h3 th:text = "'Email = ' + ${userd.getEmail()}"></h3>
-<br><br>
-<h3 th:text = "'Role = ' + ${userd.getRoles().name()}"></h3>
-<br><br>
-<h3 th:text = "'currency = ' + ${userd.getCurrency()}"></h3>
-<h2>
-    Your Asset
-</h2>
+    <h3 th:text="'Name: ' + ${userd.getName()}"></h3>
+    <h3 th:text="'Surname: ' + ${userd.getSurname()}"></h3>
+    <h3 th:text="'Email: ' + ${userd.getEmail()}"></h3>
+    <h3 th:text="'Role: ' + ${userd.getRoles().name()}"></h3>
+    <h3 th:text="'Currency: ' + ${userd.getCurrency()}"></h3>
 
-<div th:each="y : ${userd.getHotel()}">
-    <a th:href="@{/asset/pro/{id}(id=${y.getId()})}" th:text="'id = ' + ${y.getId()}"></a>
-    <p th:text="'name = ' + ${y.getName()}"></p>
-    <p th:text="'grade = ' + ${y.getGrate()}"></p>
-    <p th:text="'price = ' + ${y.getPrice()}"></p>
-    <img th:src="@{'/img/'+${y.getImg()}}" alt="Image">
-</div>
-<h2>
-    Update your account
-</h2>
-<a href="/data/update">
-    Update
-</a>
-<h2>
-    Add balance
-</h2>
-<a href="/data/balance">
-    Add to balance
-</a>
-<h2>
-    Delete Profile
-</h2>
-<a href="/data/delete">
-    Delete
-</a>
-<h3>
-    Register by Sender
-</h3>
-<a href="/data/sander">
-    Get by Sender
-</a>
-<h2>
-    Added the asset if you are Sender
-</h2>
-<a href="/asset/create">
-    Add the asset
-</a>
-<br><br><br>
-<hr>
-<h1>
-    Book asset
-</h1>
-<div th:each="t : ${userd.getHotels()}">
-    <a th:href="@{/asset/pro/{id}(id=${t.getId()})}" th:text="'id = ' + ${t.getId()}"></a>
-    <p th:text="'name = ' + ${t.getName()}"></p>
-    <p th:text="'grade = ' + ${t.getGrate()}"></p>
-    <p th:text="'price = ' + ${t.getPrice()}"></p>
-    <img th:src="@{'/img/'+${t.getImg()}}" alt="Image">
-</div>
-<br>
-<br>
-<hr>
-<h2><i>
-    Become to Admin
-</i></h2>
-<a href="/data/become/admin">
-    Become to Admin
-</a>
-<br><br>
-<hr>
-<div th:if="${userd.isAdmin()}">
-    <h2>
-        Panel Administrator
-    </h2>
-</div>
-<div th:if="${userd.isAdmin()}">
-    <form method="get" action="/data/admin">
-        <button type="submit">
-            Go to admin panel
-        </button>
-    </form>
+    <h2>Your Assets</h2>
+
+    <div th:each="y : ${userd.getHotel()}">
+        <a th:href="@{/asset/pro/{id}(id=${y.getId()})}" th:text="'ID: ' + ${y.getId()}"></a>
+        <p th:text="'Name: ' + ${y.getName()}"></p>
+        <p th:text="'Grade: ' + ${y.getGrate()}"></p>
+        <p th:text="'Price: ' + ${y.getPrice()}"></p>
+        <img th:src="@{'/img/'+${y.getImg()}}" alt="Image">
+    </div>
+
+    <h2>Update Your Account</h2>
+    <a href="/data/update">Update</a>
+
+    <h2>Add Balance</h2>
+    <a href="/data/balance">Add to Balance</a>
+
+    <h2>Delete Profile</h2>
+    <a href="/data/delete">Delete</a>
+
+    <h3>Register by Sender</h3>
+    <a href="/data/sender">Get by Sender</a>
+
+    <h2>Add an Asset if You Are a Sender</h2>
+    <a href="/asset/create">Add an Asset</a>
+
+    <hr>
+    <h1>Book Asset</h1>
+    <div th:each="t : ${userd.getHotels()}">
+        <a th:href="@{/asset/pro/{id}(id=${t.getId()})}" th:text="'ID: ' + ${t.getId()}"></a>
+        <p th:text="'Name: ' + ${t.getName()}"></p>
+        <p th:text="'Grade: ' + ${t.gradeAvg()}"></p>
+        <p th:text="'Price: ' + ${t.getPrice()}"></p>
+        <img th:src="@{'/img/'+${t.getImg()}}" alt="Image">
+    </div>
+
+    <hr>
+    <h2><i>Become an Admin</i></h2>
+    <a href="/data/become/admin">Become an Admin</a>
+
+    <hr>
+    <div th:if="${userd.isAdmin()}">
+        <h2>Administrator Panel</h2>
+        <form method="get" action="/data/admin">
+            <button type="submit">Go to Admin Panel</button>
+        </form>
+    </div>
 </div>
 </body>
 </html>

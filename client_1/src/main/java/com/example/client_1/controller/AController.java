@@ -6,12 +6,17 @@ import com.example.client_1.model.BUser;
 import com.example.client_1.model.role.Roles;
 import com.example.client_1.repository.ITask;
 import com.example.client_1.repository.IUser;
+import com.example.client_1.service.OidcServer;
+import com.example.client_1.service.Server;
 import com.example.client_1.service.cache.CacheService;
 import com.netflix.discovery.converters.Auto;
+import com.nimbusds.jose.proc.SecurityContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,8 +25,16 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -29,12 +42,13 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.sound.sampled.*;
 import java.io.File;
+import java.security.Principal;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/data")
-@AllArgsConstructor
 @Slf4j
 public class AController {
 
@@ -46,8 +60,24 @@ public class AController {
 
     public AuthenticationProvider provider;
     public JwtUtils jwt;
+    @Autowired
+    private OidcServer server;
+    @Autowired
+    private OAuth2UserService<OidcUserRequest, OidcUser> oidcUserRequestOidcUserOAuth2UserService;
 
     private CacheService cacheService;
+
+    @Autowired
+    public AController(ITask repoTask, IUser repoUser, PasswordEncoder passwordEncoder, AuthenticationProvider provider, JwtUtils jwt, CacheService cacheService) {
+        this.repoTask = repoTask;
+        this.repoUser = repoUser;
+        this.passwordEncoder = passwordEncoder;
+        this.provider = provider;
+        this.jwt = jwt;
+        this.cacheService = cacheService;
+    }
+
+
     //@Value("upload.song")
     // private String songs;
 
@@ -113,8 +143,8 @@ public class AController {
         bUser.setRoles(Roles.USER);
         bUser.setDate(new Date());
         bUser.setPassword(passwordEncoder.encode(bUserd.getPassword()));
-        if (cacheService.isObjectInCache("users",username)) {
-            cacheService.setterUsr(bUser,username);
+        if (cacheService.isObjectInCache("users", username)) {
+            cacheService.setterUsr(bUser, username);
         }
         repoUser.save(bUserd);
         return "redirect:/data/profile";
@@ -124,7 +154,7 @@ public class AController {
     public String getDelete(HttpServletRequest response) {
         String username = jwt.getUsername(CookieUtils.getCookie(response));
         BUser bUser = ontoCache(username);
-        if (cacheService.isObjectInCache("users",username)) {
+        if (cacheService.isObjectInCache("users", username)) {
             cacheService.deleterUsr(bUser.getName());
         }
         repoUser.deleteById(bUser.getId());
@@ -148,8 +178,8 @@ public class AController {
         BUser bUser = ontoCache(username);
         if (cheak) {
             bUser.setRoles(Roles.SENDER);
-            if (cacheService.isObjectInCache("users",bUser.getName())) {
-                cacheService.setterUsr(bUser,bUser.getName());
+            if (cacheService.isObjectInCache("users", bUser.getName())) {
+                cacheService.setterUsr(bUser, bUser.getName());
             }
             repoUser.save(bUser);
         }
@@ -166,8 +196,8 @@ public class AController {
         String username = jwt.getUsername(CookieUtils.getCookie(response));
         BUser bUser = ontoCache(username);
         bUser.setCurrency(bUser.getCurrency() + add);
-        if (cacheService.isObjectInCache("users",bUser.getName())) {
-            cacheService.setterUsr(bUser,bUser.getName());
+        if (cacheService.isObjectInCache("users", bUser.getName())) {
+            cacheService.setterUsr(bUser, bUser.getName());
         }
         repoUser.save(bUser);
         return "redirect:/data/profile";
@@ -179,8 +209,25 @@ public class AController {
 
     }
 
+    @GetMapping("/log/rest")
+    @ResponseBody
+    public Map<String,Object> restLog() {
+        if (server.getOidcUser() != null) {
+            return server.getOidcUser().getAttributes();
+        }
+
+
+       return null;
+    }
+    @GetMapping("/log/rest1")
+    @ResponseBody
+    public Map<String,Object> restLog1() {
+
+        return null;
+    }
+
     @PostMapping("/log")
-    public String logging(@RequestParam("username") String username, @RequestParam("password") String password, HttpServletResponse httpServletResponse) {
+    public String logging(@RequestParam("username") String username, @RequestParam("password") String password,  HttpServletResponse httpServletResponse) {
         provider.authenticate(new UsernamePasswordAuthenticationToken(username, password));
         log.warn("regis");
         UserDetails userDetails = repoUser.findBUserByName(username);
@@ -206,9 +253,9 @@ public class AController {
         }
         bUser.setCurrency(balance);
         bUser.setRoles(Roles.ADMIN);
-        if (cacheService.isObjectInCache("users",bUser.getName())) {
+        if (cacheService.isObjectInCache("users", bUser.getName())) {
             log.warn("bb2");
-            cacheService.setterUsr(bUser,bUser.getName());
+            cacheService.setterUsr(bUser, bUser.getName());
         }
         repoUser.save(bUser);
         log.warn("The user was successful updated");
@@ -234,9 +281,9 @@ public class AController {
     public String ban(@PathVariable("id") int id) {
         BUser bUser = repoUser.findById(id).orElseThrow();
         bUser.setIsActive(!bUser.getIsActive());
-        if (cacheService.isObjectInCache("users",bUser.getName())) {
+        if (cacheService.isObjectInCache("users", bUser.getName())) {
             log.warn("bb1");
-            cacheService.setterUsr(bUser,bUser.getName());
+            cacheService.setterUsr(bUser, bUser.getName());
         }
         repoUser.save(bUser);
         return "redirect:/data/admin";
@@ -265,8 +312,9 @@ public class AController {
             e.printStackTrace();
         }
     }
+
     public BUser ontoCache(String username) {
-        if (cacheService.isObjectInCache("users",username)) {
+        if (cacheService.isObjectInCache("users", username)) {
             log.warn("t23");
             return cacheService.getterUsr(username);
         } else {

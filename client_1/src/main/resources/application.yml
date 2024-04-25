@@ -11,3 +11,10 @@ eureka:
 spring:
   application:
     name: SClient0
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 538324202526-8uoqhsdtu1jb7nifb20v880f36u5r9b7.apps.googleusercontent.com
+            client-secret: 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

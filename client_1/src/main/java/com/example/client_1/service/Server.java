@@ -5,9 +5,12 @@ import com.example.client_1.model.BUser;
 import com.example.client_1.model.DTO_Hotel_User;
 import com.example.client_1.repository.IHotel;
 import com.example.client_1.repository.IUser;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -26,6 +29,7 @@ public class Server {
     private Queue<DTO_Hotel_User> queue = new LinkedList<>();
 
 
+
     @Scheduled(fixedDelay = 3000)
     public void time() {
         System.out.println("hello");
@@ -37,7 +41,7 @@ public class Server {
             throw new RuntimeException("not valid");
         } else {
             queue.add(dtoHotelUser);
-            taskScheduler.schedule(this::someMethode, Instant.now().plusMillis(time));
+            taskScheduler.schedule(this::someMethode, Instant.now().plusMillis(time * 30));
         }
     }
 
