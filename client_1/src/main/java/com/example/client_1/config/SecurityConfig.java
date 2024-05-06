@@ -80,7 +80,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity.csrf(AbstractHttpConfigurer::disable).
                 authorizeHttpRequests(auth -> auth.requestMatchers("/data/auth", "/data/log/**","/userinfo").permitAll().requestMatchers("/data/test", "/data/profile"
-                                , "/data/update", "/data/delete", "/data/sander", "/asset/**", "/img/**", "/data/balance", "/data/become/admin").authenticated()
+                                , "/data/update", "/data/delete", "/data/sander", "/asset/**", "/img/**", "/data/balance", "/data/become/admin","/data/add/**","/data/go/**","/re/**","/data/floor/**",
+                                "localhost:3030/favicon.ico").authenticated()
                         .requestMatchers("/data/admin/**", "/data/ban/**").hasAuthority("ADMIN")
                 ).formLogin(AbstractAuthenticationFilterConfigurer::permitAll).
                 sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).

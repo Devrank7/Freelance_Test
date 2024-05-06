@@ -52,6 +52,9 @@ public class BHotel {
     )
     private List<BUser> bookers = new ArrayList<>();
 
+    @Column(name = "m_desc")
+    private String mainDescription;
+
     public BHotel(String name, byte grate, int price, String img, BUser owner) {
         this.name = name;
         this.grate = grate;

@@ -53,6 +53,8 @@ public class BUser implements UserDetails {
     private List<BHotel> hotel = new ArrayList<>();
     @ManyToMany(cascade = CascadeType.ALL,fetch = FetchType.EAGER,mappedBy = "bookers")
     private List<BHotel> hotels = new ArrayList<>();
+    @Column
+    private String description;
 
     public BUser(String name, String surname, String email, String password) {
         this.name = name;

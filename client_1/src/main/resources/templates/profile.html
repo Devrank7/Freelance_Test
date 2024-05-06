@@ -69,6 +69,7 @@
     <h3 th:text="'Email: ' + ${userd.getEmail()}"></h3>
     <h3 th:text="'Role: ' + ${userd.getRoles().name()}"></h3>
     <h3 th:text="'Currency: ' + ${userd.getCurrency()}"></h3>
+    <h3 th:text="'Description: ' + ${userd.getDescription()}"></h3>
 
     <h2>Your Assets</h2>
 
@@ -79,6 +80,9 @@
         <p th:text="'Price: ' + ${y.getPrice()}"></p>
         <img th:src="@{'/img/'+${y.getImg()}}" alt="Image">
     </div>
+
+    <h2>Add a description</h2>
+    <a href="/data/add/d">Add a desc</a>
 
     <h2>Update Your Account</h2>
     <a href="/data/update">Update</a>
@@ -117,5 +121,13 @@
         </form>
     </div>
 </div>
+<div th:text="${dogs}" id="dogs"></div>
+<script>
+    setInterval(function(){
+        window.location.reload(true);
+    }, 2000);
+</script>
+
+
 </body>
 </html>

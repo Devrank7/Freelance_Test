@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Task</title>
+</head>
+<body>
+<h1>
+ | You must check this answer |
+</h1>
+<h2 style="caret: #9a0000; color: #b98484" th:text="'task description = ' + ${desc.getDescription()}"></h2>
+<br><br>
+<hr>
+<h3 th:text="'time check = ' + ${desc.getTime()}"></h3>
+
+<form method="post" action="/data/floor/check">
+    <button type="submit">
+        Exit
+    </button>
+</form>
+</body>
+</html>

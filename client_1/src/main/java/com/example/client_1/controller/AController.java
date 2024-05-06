@@ -3,14 +3,20 @@ package com.example.client_1.controller;
 import com.example.client_1.jwt.CookieUtils;
 import com.example.client_1.jwt.JwtUtils;
 import com.example.client_1.model.BUser;
+import com.example.client_1.model.TaskInfo;
 import com.example.client_1.model.role.Roles;
 import com.example.client_1.repository.ITask;
 import com.example.client_1.repository.IUser;
 import com.example.client_1.service.OidcServer;
 import com.example.client_1.service.Server;
 import com.example.client_1.service.cache.CacheService;
+import com.example.client_1.service.remind.IRemind;
+import com.example.client_1.service.remind.Remind;
+import com.example.client_1.service.remind.YourRunnable;
+import com.example.client_1.service.task.TaskService;
 import com.netflix.discovery.converters.Auto;
 import com.nimbusds.jose.proc.SecurityContext;
+import jakarta.servlet.AsyncContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -21,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -39,12 +46,16 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 
 import javax.sound.sampled.*;
 import java.io.File;
+import java.io.IOException;
 import java.security.Principal;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Controller
@@ -66,6 +77,13 @@ public class AController {
     private OAuth2UserService<OidcUserRequest, OidcUser> oidcUserRequestOidcUserOAuth2UserService;
 
     private CacheService cacheService;
+    @Autowired
+    public TaskScheduler taskScheduler;
+    @Autowired
+    private YourRunnable runnable;
+    @Autowired
+    private TaskService taskService;
+
 
     @Autowired
     public AController(ITask repoTask, IUser repoUser, PasswordEncoder passwordEncoder, AuthenticationProvider provider, JwtUtils jwt, CacheService cacheService) {
@@ -117,10 +135,23 @@ public class AController {
     }
 
     @GetMapping("/profile")
-    public String profile(Model model, HttpServletRequest response) {
+    public String profile(Model model, HttpServletRequest response,HttpServletResponse response1) throws Exception {
+        log.error("each seconds");
         String username = jwt.getUsername(CookieUtils.getCookie(response));
+        if (taskService.taskNeedToView(repoUser.findBUserByName(username).getId())) {
+            return "redirect:/data/floor";
+        }
         model.addAttribute("userd", ontoCache(username));
         return "profile";
+    }
+    @GetMapping("/floor")
+    public String floor(Model model,HttpServletRequest response) {
+        String username = jwt.getUsername(CookieUtils.getCookie(response));
+        BUser bUser = ontoCache(username);
+        TaskInfo taskInfo = taskService.getTaskInfo(bUser.getId());
+        System.out.println("somest");
+        model.addAttribute("desc",taskInfo);
+        return "floor";
     }
 
     @GetMapping("/update")
@@ -287,6 +318,52 @@ public class AController {
         }
         repoUser.save(bUser);
         return "redirect:/data/admin";
+    }
+    @GetMapping("/add/d")
+    public String addDesc(HttpServletRequest request) {
+        return "d";
+    }
+    @PostMapping("/add/d")
+    public String addDesc(@RequestParam("desc")String description,HttpServletRequest request) {
+        String username = jwt.getUsername(CookieUtils.getCookie(request));
+        BUser bUser = ontoCache(username);
+        bUser.setDescription(description);
+        if (cacheService.isObjectInCache("users", bUser.getName())) {
+            log.warn("bb4");
+            cacheService.setterUsr(bUser, bUser.getName());
+        }
+        repoUser.save(bUser);
+        return "redirect:/data/profile";
+    }
+    @GetMapping("/go/task")
+    public String onGoTask() {
+        return "go";
+    }
+    String descOrNull = null;
+
+    @PostMapping("/go/task")
+    public String onGoTask(@RequestParam("across")int across,@RequestParam("desc")String desc,HttpServletRequest request) throws InterruptedException, IOException {
+        String username = jwt.getUsername(CookieUtils.getCookie(request));
+        BUser bUser = ontoCache(username);
+        TaskInfo taskInfo = new TaskInfo(bUser.getId(),desc,across,false);
+        taskService.addTask(taskInfo);
+        taskScheduler.schedule(() -> {
+            System.out.println("so go =  " + desc);
+            taskInfo.setActive(true);
+
+        }, Instant.now().plusSeconds(across));
+        return "redirect:/data/profile";
+    }
+    @PostMapping("/floor/check")
+    public String doPostman(HttpServletRequest request) {
+        String username = jwt.getUsername(CookieUtils.getCookie(request));
+        BUser bUser = ontoCache(username);
+        if (taskService.removeTaskActive(bUser.getId())) {
+            log.info("The task has been removed from the user");
+        } else {
+            log.warn("Not found the task of the user");
+        }
+        return "redirect:/data/profile";
     }
 
     //GPT Thanks

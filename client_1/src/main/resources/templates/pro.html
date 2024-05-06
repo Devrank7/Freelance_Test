@@ -80,12 +80,15 @@
     <h3 th:text="'Grade: ' + ${use.getGrate()}"></h3>
     <hr>
     <h3 th:text="'Price: ' + ${use.getPrice()}"></h3>
+    <h3 th:text="'Price: ' + ${use.getMainDescription()}"></h3>
     <img th:src="@{'/img/'+${use.getImg()}}" alt="Image">
     <h2>Edit the asset</h2>
     <a th:href="@{/asset/update/{id}(id=${use.getId()})}" th:text="'Edit'">Edit</a>
     <h2>Delete the asset</h2>
     <a th:href="@{/asset/delete/{id}(id=${use.getId()})}" th:text="'Delete'">Delete</a>
     <h2>To book this asset</h2>
+    <h2>add a desc></h2>
+    <a th:href="@{/asset/add/d/{id}(id=${use.getId()})}" th:text="'Add'">Delete</a>
     <form method="get" th:action="@{/asset/book/{id}(id=${use.getId()})}">
         <button type="submit">Book</button>
     </form>

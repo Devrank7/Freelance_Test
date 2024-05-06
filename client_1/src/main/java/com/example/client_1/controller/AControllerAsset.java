@@ -9,13 +9,16 @@ import com.example.client_1.repository.IHotel;
 import com.example.client_1.repository.IUser;
 import com.example.client_1.service.*;
 import com.example.client_1.service.cache.CacheService;
+import com.example.client_1.service.recom.RecomendServer;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -44,6 +47,8 @@ public class AControllerAsset {
     public JwtUtils jwt;
     @Autowired
     private CacheService cacheService;
+    @Autowired
+    private RecomendServer recomendServer;
 
     @GetMapping("/all")
     public String getAll(Model model) {
@@ -286,6 +291,27 @@ public class AControllerAsset {
     public String view(@PathVariable("id")int id,Model model) {
         model.addAttribute("comm",ontoCacheHotel(id));
         return "view";
+    }
+    @GetMapping("/all/by/user")
+    public String sortedByInterestingUser(Model model, HttpServletRequest request) {
+        String username = jwt.getUsername(CookieUtils.getCookie(request));
+        BUser bUser = ontoCache(username);
+        model.addAttribute("hot",recomendServer.getSorted(hotelRepo.findAll(),bUser.getDescription(),false,false));
+        return "hotel";
+    }
+    @GetMapping("/add/d/{id}")
+    public String addADescriptionByUser(@PathVariable("id")int id) {
+        return "desc";
+    }
+    @PostMapping("/add/d/{id}")
+    public String addDesc(@PathVariable("id")int id,@RequestParam("desc")String description) {
+        BHotel bHotel = ontoCacheHotel(id);
+        bHotel.setMainDescription(description);
+        if (cacheService.isObjectInCache("hotel",id)) {
+            cacheService.setter(bHotel,id);
+        }
+        hotelRepo.save(bHotel);
+        return "redirect:/asset/all";
     }
     public BUser ontoCache(String username) {
         if (cacheService.isObjectInCache("users",username)) {
