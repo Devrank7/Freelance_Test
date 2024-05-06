@@ -58,7 +58,6 @@ public class CacheService {
     }
     @Cacheable(value = "hotel",key = "#id")
     public BHotel getter(int id) {
-        log.warn("new cache");
         return hotelRepo.findById(id).orElseThrow();
     }
     @CachePut(value = "hotel",key = "#id")

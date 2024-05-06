@@ -4,9 +4,11 @@ import com.example.client_1.jwt.CookieUtils;
 import com.example.client_1.jwt.JwtUtils;
 import com.example.client_1.model.BUser;
 import com.example.client_1.model.TaskInfo;
+import com.example.client_1.model.User_ID;
 import com.example.client_1.model.role.Roles;
 import com.example.client_1.repository.ITask;
 import com.example.client_1.repository.IUser;
+import com.example.client_1.repository.Repo_usr_id;
 import com.example.client_1.service.OidcServer;
 import com.example.client_1.service.Server;
 import com.example.client_1.service.cache.CacheService;
@@ -83,6 +85,8 @@ public class AController {
     private YourRunnable runnable;
     @Autowired
     private TaskService taskService;
+    @Autowired
+    private Repo_usr_id repoUsrId;
 
 
     @Autowired
@@ -246,23 +250,26 @@ public class AController {
         if (server.getOidcUser() != null) {
             return server.getOidcUser().getAttributes();
         }
-
-
        return null;
-    }
-    @GetMapping("/log/rest1")
-    @ResponseBody
-    public Map<String,Object> restLog1() {
-
-        return null;
     }
 
     @PostMapping("/log")
     public String logging(@RequestParam("username") String username, @RequestParam("password") String password,  HttpServletResponse httpServletResponse) {
         provider.authenticate(new UsernamePasswordAuthenticationToken(username, password));
         log.warn("regis");
-        UserDetails userDetails = repoUser.findBUserByName(username);
-        CookieUtils.setCookie(httpServletResponse, jwt.generateToken(userDetails));
+        BUser bUser = repoUser.findBUserByName(username);
+        if (repoUsrId.count() == 0) {
+            repoUsrId.save(new User_ID(bUser.getId()));
+        } else if (repoUsrId.count() == 1) {
+            int id = repoUsrId.findAll().stream().findFirst().orElseThrow().getId();
+            User_ID userId = new User_ID(bUser.getId());
+            userId.setId(id);
+            repoUsrId.save(userId);
+        } else {
+            log.error("Ohh, something went wrong: amount elements of the list = " + repoUsrId.count());
+        }
+
+        CookieUtils.setCookie(httpServletResponse, jwt.generateToken(bUser));
         return "redirect:/data/profile";
 
     }
@@ -339,7 +346,6 @@ public class AController {
     public String onGoTask() {
         return "go";
     }
-    String descOrNull = null;
 
     @PostMapping("/go/task")
     public String onGoTask(@RequestParam("across")int across,@RequestParam("desc")String desc,HttpServletRequest request) throws InterruptedException, IOException {
@@ -392,10 +398,8 @@ public class AController {
 
     public BUser ontoCache(String username) {
         if (cacheService.isObjectInCache("users", username)) {
-            log.warn("t23");
             return cacheService.getterUsr(username);
         } else {
-            log.warn("t89");
             BUser bUser = repoUser.findBUserByName(username);
             if (cacheService.needToAddToCacheUsr(bUser)) {
                 cacheService.getterUsr(username);

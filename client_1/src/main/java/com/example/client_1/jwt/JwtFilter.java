@@ -24,9 +24,7 @@ public JwtUtils jwtTokenUtils;
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String token = CookieUtils.getCookie(request);
-        log.warn("lvl 1");
         if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            log.warn("lvl 2");
             try {
                 String username = jwtTokenUtils.getUsername(token);
                 List<SimpleGrantedAuthority> authorities = jwtTokenUtils.getRoles(token).stream()

@@ -4,19 +4,15 @@ import com.example.client_1.model.BHotel;
 import com.example.client_1.model.BUser;
 import com.example.client_1.model.DTO_Hotel_User;
 import com.example.client_1.repository.IHotel;
-import com.example.client_1.repository.IUser;
-import lombok.Getter;
-import lombok.Setter;
+import com.example.client_1.service.task.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 
 @Service
@@ -29,16 +25,8 @@ public class Server {
     private Queue<DTO_Hotel_User> queue = new LinkedList<>();
 
 
-
-
-
-    @Scheduled(fixedDelay = 3000)
-    public void time() {
-        System.out.println("hello");
-    }
-
     public void toBook(BHotel hotel, BUser user, long time) {
-        DTO_Hotel_User dtoHotelUser = new DTO_Hotel_User(hotel,user);
+        DTO_Hotel_User dtoHotelUser = new DTO_Hotel_User(hotel, user);
         if (!dtoHotelUser.isValid()) {
             throw new RuntimeException("not valid");
         } else {
@@ -58,7 +46,7 @@ public class Server {
             if (bHotel.getBookers().get(i).getId() == dtoHotelUser.getUser().getId()) break;
             i++;
         }
-        bHotel.getBookers().set(i,null);
+        bHotel.getBookers().set(i, null);
         bHotelr.save(bHotel);
     }
 
